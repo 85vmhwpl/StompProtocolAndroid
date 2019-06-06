@@ -223,12 +223,12 @@ public class StompClient {
         }
 
         return connectionProvider.disconnect()
-                .doFinally(() -> {
+                .andThen(Completable.fromAction(() -> {
                     Log.d(TAG, "Stomp disconnected");
                     getConnectionStream().onComplete();
                     getMessageStream().onComplete();
                     lifecyclePublishSubject.onNext(new LifecycleEvent(LifecycleEvent.Type.CLOSED));
-                });
+                }));
     }
 
     public Flowable<StompMessage> topic(String destinationPath) {
@@ -241,10 +241,10 @@ public class StompClient {
         else if (!streamMap.containsKey(destPath))
             streamMap.put(destPath,
                     subscribePath(destPath, headerList).andThen(
-                    getMessageStream()
-                            .filter(msg -> pathMatcher.matches(destPath, msg))
-                            .toFlowable(BackpressureStrategy.BUFFER)
-                            .share()).doFinally(() -> unsubscribePath(destPath).subscribe())
+                            getMessageStream()
+                                    .filter(msg -> pathMatcher.matches(destPath, msg))
+                                    .toFlowable(BackpressureStrategy.BUFFER)
+                                    .share()).doFinally(() -> unsubscribePath(destPath).subscribe())
             );
         return streamMap.get(destPath);
     }
