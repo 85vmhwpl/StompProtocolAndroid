@@ -136,14 +136,14 @@ public class StompClient {
                     }
                 });
 
-        messagesDisposable = connectionProvider.messages()
+         messagesDisposable = connectionProvider.messages()
                 .map(StompMessage::from)
                 .filter(heartBeatTask::consumeHeartBeat)
                 .doOnNext(getMessageStream()::onNext)
                 .filter(msg -> msg.getStompCommand().equals(StompCommand.CONNECTED))
                 .subscribe(stompMessage -> {
                     getConnectionStream().onNext(true);
-                }, {
+                }, throwable -> {
                     disconnect();
                 });
     }
